@@ -254,6 +254,90 @@ ICONMODE=AUTO
 
 #SESSION_#_TYPE=icewm
 
+# -- NX Options
+
+#NX_NOPASSWORD="ON"      # disables the functionality to save the username and password
+                        # in the NX session file. This is handy when an NX terminal has
+                        # multiple users and the administrator needs to enforce the keying
+                        # in of the NX user credentials before each session. It ensures
+                        # that only pre-established users can access the NX server via NX client.
+        
+#NX_NOEXIT="ON"          # disables all Close buttons in the NX client GUI.  When the user closes
+                        # or loses a running session, a new NX client dialog box automatically
+                        # appears on the desktop, ready for the next user to start a new session
+                        # or for the current user to re-connect to his lost session. This is
+                        # welcome where client terminals have multiple users who need to access
+                        # their session quickly and easily.
+        
+#NX_NOCONFIG="ON"        # disables all user possibilities to configure new session setups or
+                        # modify existing ones. This allows the administrator to completely lock
+                        # down the types of sessions a user can run. This feature works only when
+                        # the NX client is started with the --session or --plugin option.
+
+#SESSION_#_NX_LOGIN_USER="Thinstation"
+
+#SESSION_#_TYPE=nx
+#SESSION_#_TITLE="Gnome"
+#SESSION_#_NX_ADVANCED_ENABLE_SSL_ENCRYPTION="true"
+#SESSION_#_NX_GENERAL_DESKTOP="Gnome"
+#SESSION_#_NX_GENERAL_SERVER_HOST="nx-server-ip"
+#SESSION_#_NX_GENERAL_REMEMBER_PASSWORD="true"
+#SESSION_#_NX_GENERAL_RESOLUTION="fullscreen"
+#SESSION_#_NX_GENERAL_SESSION="Unix"
+
+#SESSION_#_TYPE=nx
+#SESSION_#_TITLE="Firefox"
+#SESSION_#_NX_ADVANCED_ENABLE_SSL_ENCRYPTION="true"
+#SESSION_#_NX_GENERAL_DESKTOP="Console"
+#SESSION_#_NX_GENERAL_SERVER_HOST="nx-server-ip"
+#SESSION_#_NX_GENERAL_REMEMBER_PASSWORD="true"
+#SESSION_#_NX_GENERAL_COMMAND_LINE="/usr/local/firefox/firefox"
+#SESSION_#_NX_GENERAL_SESSION="Unix"
+#SESSION_#_NX_GENERAL_ONLY_CONSOLE="false"
+
+#SESSION_#_TYPE=nx
+#SESSION_#_TITLE="Windows"
+#SESSION_#_NX_ADVANCED_ENABLE_SSL_ENCRYPTION="true"
+#SESSION_#_NX_GENERAL_DESKTOP="RDP"
+#SESSION_#_NX_GENERAL_RESOLUTION_VALUE="fullscreen"
+#SESSION_#_NX_GENERAL_SERVER_HOST="nx-server-ip"
+#SESSION_#_NX_GENERAL_SESSION="Windows"
+#SESSION_#_NX_WINDOWS_SESSION_SERVER="windows-server-ip"
+#SESSION_#_NX_WINDOWS_SESSION_AUTHENTICATION="1"
+
+#SESSION_0_TYPE=nx
+#SESSION_0_TITLE="xfce4"
+#SESSION_0_NX_ADVANCED_ENABLE_SSL_ENCRYPTION="true"
+#SESSION_0_NX_GENERAL_DESKTOP="console"
+#SESSION_0_NX_GENERAL_CUSTOM_UNIX_DESKTOP="application"
+#SESSION_0_NX_GENERAL_SERVER_HOST="10.0.0.7"
+#SESSION_0_NX_GENERAL_REMEMBER_PASSWORD="true"
+#SESSION_0_NX_GENERAL_COMMAND_LINE="/usr/bin/startxfce4"
+#SESSION_0_NX_GENERAL_SESSION="Unix"
+#SESSION_0_NX_GENERAL_ONLY_CONSOLE="false"
+
+# To support a USB and CDROM share for NX, include:
+# Client shares requires Samba server and Samba client:
+#
+#SESSION_#_NX_SERVICES_SHARES="true"
+#SESSION_#_NX_SERVICES_AUDIO="false"
+#
+#SESSION_#_NX_SHARE0_ALIAS="\$(SHARES)/usb"  # make sure to escape $ chars
+#SESSION_#_NX_SHARE0_PASSWORD="DO NOT EDIT"  # Don't touch. The proper PW is supplied automatically
+#SESSION_#_NX_SHARE0_SHARENAME="usb"
+#SESSION_#_NX_SHARE0_TYPE="disk"
+#SESSION_#_NX_SHARE0_USERNAME="root"
+#
+#SESSION_#_NX_SHARE1_ALIAS="\$(SHARES)/cdrom"  # make sure to escape $ chars
+#SESSION_#_NX_SHARE1_PASSWORD="DO NOT EDIT"  # Don't touch. The proper PW is supplied automatically
+#SESSION_#_NX_SHARE1_SHARENAME="cdrom"
+#SESSION_#_NX_SHARE1_TYPE="disk"
+#SESSION_#_NX_SHARE1_USERNAME="root"
+#
+#SESSION_#_NX_SHARE_CHOSEN_SHARE_NUMBER="2"  # Total number of Samba shares. Do set properly!
+#SESSION_#_NX_SHARE_CHOSEN_SHARE0="Share0"
+#SESSION_#_NX_SHARE_CHOSEN_SHARE1="Share1"
+
 
 # The -a option here specifies the color depth
 # Note certain servers support certain color depths, wrong settings with this
@@ -385,6 +469,31 @@ X_DRIVER_OPTION1="swcursor On"
 #X_MONITOR_OPTION1="DPMS On"
 #X_MONITOR_OPTION2="TargetRefresh 60"
 #X_MONITOR_MODELINE='"1680x1050" 146.2 1680 1784 1960 2240 1050 1053 1059 1089 -HSync -VSync'
+
+##
+# --- Samba Options
+#
+# SAMBA_SERVER_ENABLED    Enable Samba Server Daemons, On/Off
+# SAMBA_SECURITY          Type of security, USER, DOMAIN, SERVER
+# SAMBA_SERVER            Server for security
+# SAMBA_WINS              Server Name to Enable Samba to be a WINS Client
+# SAMBA_HARDDISK          Enable Harddrive support, On/Off
+# SAMBA_CDROM             Enable CDRom Support, On/Off
+# SAMBA_FLOPPY            Enable Floppy Support, On/Off
+# SAMBA_PRINTER           Enable Printer Support, On/Off
+# SAMBA_USB               Enable USB Support, On/Off
+
+#SAMBA_SERVER_ENABLED=Off
+#SAMBA_WORKGROUP=BigPeople
+#SAMBA_SECURITY=Server
+#SAMBA_SERVER=BadMan
+#SAMBA_WINS=BadMan
+#SAMBA_HARDDISK=Off
+#SAMBA_CDROM=On
+#SAMBA_FLOPPY=On
+#SAMBA_PRINTER=On
+#SAMBA_USB=Off
+
 
 ##
 # --- PKG Options
