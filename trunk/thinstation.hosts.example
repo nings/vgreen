@@ -1,0 +1,4 @@
+# You can have any amount of spaces/tabs between names
+# HOST		MAC		GROUPS			COMMENTS
+thinstation1 	000103014152	samba powerpc	 	# Donald Ducks Computer
+thinstation2 	000103014152				# Daffy Ducks Computer

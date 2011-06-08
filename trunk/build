@@ -1,0 +1,1259 @@
+#! /bin/bash
+
+INITDIR=boot-images/initrd
+PKGDIR=boot-images/pkg-packages
+DEVDIR=./packages/base/dev
+MODDIR=boot-images/module-packages
+PACDIR=./tmp-tree/packages
+MAXIMAGE=524288
+TOOLSDIR=./utils/tools
+KERNEL_PARAMETERS="ramdisk_size=$MAXIMAGE"
+CONFDIR=./conf
+
+. packages/base/etc/thinstation.functions
+
+# Show Command line Parameters
+
+showhelp()
+{
+	echo "--license ACCEPT      Accept all licenses automatically"
+	echo "--help                Show help then exit"
+	echo "--autodl              Download all commercial addins automatically"
+	echo "--removeall           Remove all commercial binaries then exit"
+	echo "--buildtime FILENAME  Add buildtime conf file to squashfs image and build boot images only"
+	echo "--noimages            Build process but don't generate boot images"
+	echo "--regenconf           Copy over default config example files again"
+	echo "--savedir             Saves the tmp-tree directory for debugging and development purposes"
+	echo "--update              Will run all package update scripts <package>/build/update"
+}
+
+## Add PKG Files to local Storage
+
+addpkgs()
+{
+  if ls $1/*.pkg > /dev/null 2>&1 ; then
+    rm $1/*.pkg
+  fi
+  if [ "`make_caps $ts_localpkgs`" = "TRUE" ] ; then
+    if ls $PKGDIR/*.pkg > /dev/null 2>&1 ; then
+    	cp $PKGDIR/*.pkg $1
+    fi
+  fi
+}
+
+lib_dependencies()
+{
+
+echo -e "\nAdding Library Dependencies\n"
+
+for pkgname in `echo "./tmp-tree" && find $PKGDIR -mindepth 1 -maxdepth 1`
+do
+  for findname in `find $pkgname -name "*" -type f | grep -v \.idl`
+  do
+    file $findname 2>/dev/null | grep "ELF 32-bit" | cut -d: -f1 >> ./liblist.tmp 2>/dev/null
+  done
+  sort liblist.tmp > liblist.final
+  cp liblist.final liblist.list
+  rm liblist.tmp
+
+  while [ -s liblist.final ]; do
+
+    (cat ./liblist.final ) |
+    while read filename
+    do
+      (ldd $filename 2>/dev/null | grep -v "not a dynamic executable" | cut -d= -f1 ) |
+      while read libname
+      do
+	libfile=`basename $libname`
+	if [ ! -e ./tmp-tree/lib/$libfile ] && [ ! -e $pkgname/lib/$libfile ] ; then
+	  if [ -e ./packages/lib/$libfile ] ; then
+		echo "Adding $libfile dependency in `basename $pkgname` for `basename $filename`"
+		if [ ! -e $pkgname/lib ] ; then
+			mkdir $pkgname/lib
+		fi
+		cp ./packages/lib/$libfile $pkgname/lib
+	  fi
+	fi
+      done	
+    done
+    for findname in `find $pkgname -name "*" -type f | grep -v \.idl`
+    do
+      file $findname 2>/dev/null | grep "ELF 32-bit" | cut -d: -f1 >> ./liblist.tmp 2>/dev/null
+    done
+    sort liblist.tmp > liblist.after
+    comm -3 liblist.list liblist.after > liblist.final
+    cp liblist.after liblist.list
+    rm liblist.tmp
+
+  done
+done
+
+rm liblist.after
+rm liblist.list
+rm liblist.final
+
+}
+
+
+module_dependencies()
+{
+
+for pkgname in `echo "./tmp-tree" && find $MODDIR/ -mindepth 1 -maxdepth 1 && find $PKGDIR/ -mindepth 1 -maxdepth 1`
+do
+  if [ -e $pkgname/lib/modules ] ; then
+     # This checks to see if we are doing a first or second run of module_dependencies
+     if [ ! -e $pkgname/modules.final ] ; then
+	     ls $pkgname/lib/modules/ | grep \.ko > $pkgname/modules.final
+	     cp $pkgname/modules.final ./modules.list
+     else
+	     ls $pkgname/lib/modules/ | grep \.ko > ./modules.list
+
+     fi
+     while [ -s $pkgname/modules.final ]
+     do
+	for module in `cat $pkgname/modules.final`
+	do
+		modulelist="`cat ./modules.tmp | grep $module: | cut -f2 -d:`"
+		# Checks for already existing modules
+		for moduleinbase in $modulelist
+		do
+			if [ ! -e ./tmp-tree/lib/modules/`basename $moduleinbase` ] ; then
+				modulefinal="$modulefinal $moduleinbase "
+			fi
+		done
+		echo "Adding dependency in `basename $pkgname` for module $module"
+		if [ -n "$modulefinal" ] ; then
+		    cp `echo $modulefinal | sed -e "s@/lib/modules/@./kernel/lib/modules/@g"`\
+		       $pkgname/lib/modules > /dev/null 2>&1
+		fi
+		modulefinal=""
+	done
+        ls $pkgname/lib/modules/ | grep .ko > ./modules.after
+        diff -e ./modules.list ./modules.after | grep \.ko > $pkgname/modules.final
+        cp ./modules.after ./modules.list
+	rm ./modules.after
+  done
+  rm $pkgname/modules.final
+  rm ./modules.list
+ fi
+done
+
+}
+
+make_initrd()
+{
+   echo -e "\nMaking root squashfs filesystem\n"
+   cp $INITDIR/initrd.devices $INITDIR/initrd
+   $TOOLSDIR/mksquashfs ./tmp-tree/ $INITDIR/initrd -all-root
+   chmod 755 $INITDIR/initrd
+}
+
+package_dependencies ()
+{
+
+ ls $PACDIR/*.$1 > packages.final 2>/dev/null
+
+ cp packages.final packages.list
+
+ while [ -s packages.final ]; do
+  (cat packages.final ) |
+  while read filename
+  do
+    package=`basename $filename .$1`
+    echo "Adding Dependent $1 Packages for $package"
+    if [ -e packages/$package/dependencies ] ; then
+      (cat packages/$package/dependencies ) |
+      while read name cross
+      do
+       	if [ "$1" = "package" ] || [ "$name" = "base" ] ; then
+          if [ ! -e $PACDIR/$name.package ] && [ ! -e $PACDIR/$name.pkg ] ; then
+           if [ -e $PACDIR/$cross.package ] || [ -e $PACDIR/$cross.pkg ] || [ -z "$cross" ] ; then
+            echo "                 Packages package $name"
+            echo "cp -Rp ./packages/$name/* ./tmp-tree > /dev/null 2>&1">>\
+              $PACDIR/$name.package
+	   fi
+          fi
+        elif [ "$1" = "pkg" ] ; then
+          if [ ! -e $PACDIR/$name.package ] && [ ! -e $PACDIR/$name.pkg ] ; then
+           if [ -e $PACDIR/$cross.package ] || [ -e $PACDIR/$cross.pkg ] || [ -z "$cross" ] ; then
+            echo "                 Packages pkg $name"
+	    echo -e "cp -Rp ./packages/$name $PKGDIR" >> $PACDIR/$name.pkg
+	   fi
+          fi
+        fi
+      done
+    else
+	echo "Not Found $package dependency!!"
+	sleep 5
+    fi
+  done
+  ls $PACDIR/*.$1 > packages.after
+  diff -e packages.list packages.after | grep \.$1 > packages.final
+  cp packages.after packages.list
+  rm ./packages.after
+ done
+ rm ./packages.final
+ rm ./packages.list
+}
+
+web_package ()
+{
+    URL=$1
+    package=$2
+    filename=`make_caps $2`
+
+    filetype=`echo $1 | cut -d: -f1`
+    filepath=`echo $1 | cut -d: -f2`
+	echo $filetype
+
+    if [ -e ./packages/$package ] ; then
+      if [ -e $PACDIR/httpproxy.param ] ; then
+        . $PACDIR/httpproxy.param
+      fi
+      if [ -n "$AUTODL" ] ; then
+        CHOICE="Y"
+      else
+        echo -e "\nINSTALLING $filename"
+	echo -e "$filename is not installed, we need to setup binary file."
+        echo -e "This only needs to be done once.\n"
+        echo "Continue? (Y/N)"
+        read CHOICE
+        CHOICE=`make_caps $CHOICE`
+      fi
+
+      if [ "$CHOICE" = "Y" ] ; then
+ 	mkdir ./wget_tmp
+	echo $filetype
+	case `make_caps $filetype` in
+	HTTP)
+		echo -e "\nWe will download from Net....."
+                echo -e "We will check to see if a proxy is defined in build.conf\n"
+	        if [ ! -z "$ts_httpproxy" ] ; then
+	    		http_proxy=$ts_httpproxy
+	    		ts_httpproxy=on
+	    		echo "Using proxy $http_proxy"
+		else
+	    		ts_httpproxy=off
+	    		echo "Not using any proxy to connect to internet"
+    		fi
+#		if ! wget -N $URL --proxy=$ts_httpproxy --directory-prefix=wget_tmp ; then
+ 		outfile=wget_tmp/`basename $URL`
+		if ! wget -N $URL -O $outfile --proxy=$ts_httpproxy --directory-prefix=wget_tmp ; then
+			echo -e "\nError has occured downloading file"
+       	  		echo -e "Build Aborted\n"
+	  		remove_files
+	  		exit 1
+		fi
+	;;
+	FILE) 
+		echo -e "\nWe will install from file path....."
+		if ! cp $filepath ./wget_tmp ; then
+			echo -e "\nError has occured copying file"
+       	  		echo -e "Build Aborted\n"
+	  		remove_files
+	  		exit 1
+		fi
+	;;
+	*)
+		echo -e "\nCann't determine installation type, should be http: or file:"
+       	  	echo -e "Build Aborted\n"
+	  	remove_files
+	  	exit 1
+	;;
+        esac
+
+	if ./packages/$package/build/install $URL ; then
+	  touch ./packages/$package/build/installed
+	  echo -e "\n$package Setup complete"
+	else
+	  echo -e "\nError has occured while installing package"
+       	  echo -e "Build Aborted\n"
+	  remove_files
+	  exit 1
+	fi
+	rm -Rf ./wget_tmp
+      fi
+    else
+	  echo "Error has occured"
+	  echo "$package does not exist in packages directory"
+          echo -e "Build Aborted\n"
+	  remove_files
+          exit 1
+    fi
+}
+
+## Remove Temp files
+
+remove_files()
+{
+	if [ -e ./tmp-tree ] ; then
+	  if [ -z "$SAVEDIR" ]; then
+	    rm -Rf ./tmp-tree/*
+	    rmdir ./tmp-tree
+	  fi
+	fi
+	if [ -e ./liblist ] ; then
+	  rm ./liblist
+	fi
+	if [ -e ./wget_tmp ] ; then
+	  rm -Rf ./wget_tmp
+	fi
+	if [ -e ./liblist.tmp ] ; then
+	  rm ./liblist.tmp
+	fi
+	if [ -e $MODDIR ] ; then
+	  rm -R $MODDIR
+	fi
+}
+
+## Add boot splash image
+
+splash_setup()
+{
+  if [ -z "$ts_bootlogo" ] ; then
+    tmpparams=/tmp/ts.params
+    touch $tmpparams
+    (cat $CONFIG_FILE; echo) | # make sure there is a LF at the end
+    while read type name args
+    do
+	type=`echo $type | sed -e s/\//g | sed -e 's/\&/\\\&/g'`
+	name=`echo $name | sed -e s/\//g | sed -e 's/\&/\\\&/g'`
+	args=`echo $args | sed -e s/\//g | sed -e 's/\&/\\\&/g'`
+	case $type in
+	param)
+	    echo "ts_$name=$args" >> $tmpparams
+	    ;;
+	esac
+    done
+    . $tmpparams
+    rm $tmpparams
+  fi
+
+  if [ "`make_caps $ts_bootlogo`" = "TRUE" ] ; then
+	if [ "`make_caps $ts_bootresolution`" = "800X600" ] ; then
+		BOOTRESOLUTION="800x600"
+		KERNEL_PARAMETERS="$KERNEL_PARAMETERS splash=silent vga=788"
+	elif [ "`make_caps $ts_bootresolution`" = "640X480" ] ; then
+		BOOTRESOLUTION="640x480"
+		KERNEL_PARAMETERS="$KERNEL_PARAMETERS splash=silent vga=785"
+	else
+		BOOTRESOLUTION="1024x768"
+		KERNEL_PARAMETERS="$KERNEL_PARAMETERS splash=silent vga=791"
+	fi
+	
+	cd $TOOLSDIR
+	for filename in `ls boot/*.jpg`
+	do
+		echo "+ Converting $filename to 16bit colour"
+		./convert -depth 16 $filename $filename.tmp
+		mv $filename.tmp $filename
+	done
+	cd ../..
+
+	echo -e "+ Adding splash boot logo\n"
+	$TOOLSDIR/splash -s -f $TOOLSDIR/boot/bootsplash-$BOOTRESOLUTION.cfg >> $INITDIR/initrd
+
+  fi
+}
+    
+
+# Main TS build script
+main()
+{
+
+if [ -e $PKGDIR ] ; then
+	rm -Rf $PKGDIR/*
+else
+	mkdir $PKGDIR
+fi
+
+if [ -e ./tmp-tree ]; then
+	rm -Rf ./tmp-tree/*
+	rmdir ./tmp-tree
+fi
+mkdir ./tmp-tree
+mkdir ./tmp-tree/etc
+mkdir ./tmp-tree/lib
+mkdir ./tmp-tree/lib/modules
+mkdir ./tmp-tree/packages
+mkdir $MODDIR
+
+echo "+ Building image: "
+(cat $CONFIG_FILE; echo) | # make sure there is a LF at the end
+while read type name args
+do
+    type=`echo $type | sed -e s/\//g | sed -e 's/\&/\\\&/g'`
+    name=`echo $name | sed -e s/\//g | sed -e 's/\&/\\\&/g'`
+    args=`echo $args | sed -e s/\//g | sed -e 's/\&/\\\&/g'`
+    case $type in
+    \#*|"") continue 
+	    ;;
+    param)
+	echo "Package: $name"
+	echo "ts_$name=$args" >> $PACDIR/$name.param
+	;;
+    package)
+	echo "Package: $name"
+	if [ -d ./packages/$name ]; then
+	   echo "cp -Rp ./packages/$name/* ./tmp-tree > /dev/null 2>&1">>\
+	     $PACDIR/$name.package
+	else
+	   echo "Not Found $name!!"
+	   sleep 5
+	fi
+	;;
+    module)
+    	if [ -e ./kernel/alias/$name ] ; then
+		name=`cat ./kernel/alias/$name`
+	fi
+        if [ -e `find ./kernel/modules/ -follow -name "$name.ko"` ] ; then
+		echo "Module: $name"
+		cp `find ./kernel/modules/ -follow -name "$name.ko"` ./tmp-tree/lib/modules/"$name".ko
+	else
+		echo "Error, Module $name not found"
+	fi
+	echo $name `echo $args | cut -f1 -d#` >> ./tmp-tree/etc/modules
+	;;
+    module_pkg)
+    	if [ -e ./kernel/alias/$name ] ; then
+		name=`cat ./kernel/alias/$name`
+	fi
+        if [ -e `find ./kernel/modules/ -follow -name "$name.ko"` ] ; then
+		echo "Module Pkg: $name"
+		mkdir $MODDIR/$name
+		mkdir $MODDIR/$name/lib
+		mkdir $MODDIR/$name/lib/modules
+		mkdir $MODDIR/$name/etc
+		cp `find ./kernel/modules/ -follow -name "$name.ko"` $MODDIR/$name/lib/modules
+		echo $name $args `echo $args | cut -f1 -d#` > $MODDIR/$name/etc/$name.modules
+	else
+		echo "Error, Module $name not found"
+	fi
+	;;
+    pkg)
+        echo "building-pkg $name"
+	echo -e "cp -Rp ./packages/$name $PKGDIR" >> $PACDIR/$name.pkg
+	;;
+    *)
+	echo "Unknown config line: $type $name $args"
+	;;
+    esac
+done
+
+# Check if kernel exists
+
+if [ ! -e ./kernel/vmlinuz ] ; then
+	echo -e "\nError Kernel not found!!!"
+	remove_files
+	exit 0
+fi
+
+# Adding additional packages which are dependencies of modules
+
+echo -e "\nAdding package module dependencies\n"
+for pkgname in `echo "./tmp-tree" && find $MODDIR/ -mindepth 1 -maxdepth 1`
+do
+  (ls ./kernel/dependencies_module/ ) |
+  while read module
+  do
+    if [ -e $pkgname/lib/modules/$module.ko ] || [ -e ./tmp-tree/lib/modules/$module.ko ] ; then
+      (cat ./kernel/dependencies_module/$module ) |
+      while read type name
+      do
+        case $type in
+        package)
+	  if [ ! -e $PACDIR/$name.package ] && [ ! -e $PACDIR/$name.pkg ] ; then
+            if [ -e ./tmp-tree/lib/modules/$module.ko ] ; then
+	      echo "Package: $name"
+	      if [ -d ./packages/$name ]; then
+	         echo "cp -Rp ./packages/$name/* ./tmp-tree > /dev/null 2>&1">>\
+	           $PACDIR/$name.package
+	      else
+	         echo "Not Found $name!!"
+	         sleep 5
+	      fi
+	    elif [ -e $pkgname/lib/modules/$module.ko ] ; then
+              echo "building-pkg $name"
+	      echo -e "cp -Rp ./packages/$name $PKGDIR" >> $PACDIR/$name.pkg
+            fi
+          fi
+        ;;
+        *)
+          continue
+        ;;
+        esac
+      done
+    fi
+  done
+done
+
+
+# Adding third-party binaries
+
+echo -e "\nAdding and install non-distributable binaries\n"
+
+for package in `ls $PACDIR | grep -v "\.param"`
+do
+  package=`echo $package | cut -f1 -d.`
+  # Check if need to add full locale support for package
+  if [ -e ./packages/$package/build/fulllocales ] ; then
+	ts_forcelocales="true"
+  fi
+  if [ ! -e ./packages/$package/build/installed ] && [ -e ./packages/$package/build/install ] ; then
+	. $PACDIR/"$package"url.param
+	URL=`eval echo '$ts_'$package'url'`
+	if [ -n "$URL" ] ; then
+		web_package $URL $package
+	else
+		echo "$package url param not set in build.conf"
+      		echo -e "Build Aborted\n"
+		remove_files
+		exit 1
+	fi
+  fi
+
+  if [ -e ./packages/$package/build/license ] ; then
+   if [ "`make_caps $LICENSE`" = "DECLINE" ] ; then
+     CHOICE=NO
+   elif [ "`make_caps $LICENSE`" != "ACCEPT" ] ; then
+     cat ./packages/$package/build/license | more
+     echo "Do you agree to this notice (YES/NO)"
+     read CHOICE
+     CHOICE=`make_caps $CHOICE`
+   else
+     CHOICE=YES
+   fi
+
+   if [ "$CHOICE" = "YES" ] ; then
+	echo
+	echo "INFO: $package included"
+	echo
+	sleep 1
+   else
+	if [ -e $PACDIR/$package.package ] ; then
+		rm $PACDIR/$package.package
+	elif [ -e $PACDIR/$package.pkg ] ; then
+		rm $PACDIR/$package.pkg
+	fi
+	echo
+	echo "INFO: $package not included"
+	echo
+	sleep 4
+   fi
+  fi
+done
+
+# Adding dependent packages
+
+echo -e "\nAdding Package Dependencies\n"
+
+package_dependencies package
+package_dependencies pkg
+
+# Add all packages to filetree
+
+echo -e "\nAdding Packages to Filetree\n"
+ls $PACDIR/* > ./filelist
+for filename in `cat ./filelist | grep "\.package"` ; do
+	. $filename
+done
+for filename in `cat ./filelist | grep "\.pkg"` ; do
+	. $filename
+done
+for filename in `cat ./filelist | grep "\.param"` ; do
+	. $filename
+done
+rm ./filelist
+
+# Set Additional Params
+
+echo -e "Setting Passwords"
+
+if [  -e $PACDIR/rootpasswd.param ]; then
+    GETPASSWD=`$TOOLSDIR/cryptmd5 $ts_rootpasswd`
+    cp ./tmp-tree/etc/passwd ./tmp-tree/etc/passwd.tmp
+    echo "root:$GETPASSWD:0:0:root:/root:/bin/sh" >./tmp-tree/etc/passwd
+    cat ./tmp-tree/etc/passwd.tmp | grep -v "root" >> ./tmp-tree/etc/passwd
+    rm ./tmp-tree/etc/passwd.tmp
+    if [ ! -e $PACDIR/xinetd.package ] && [ ! -e $PACDIR/xinetd.pkg ] ; then
+	cp -Rp ./packages/xinetd/* ./tmp-tree
+	touch $PACDIR/xinetd.package
+    fi
+fi
+
+if [ -e $PACDIR/xorgvncpasswd.param ]; then
+    $TOOLSDIR/vncpasswd ./tmp-tree/etc/.vncpasswd $ts_xorgvncpasswd
+fi
+
+if [ -e $PACDIR/storagepasswd.param ]; then
+    echo $ts_storagepasswd > ./tmp-tree/etc/.storage
+    chmod 400 ./tmp-tree/etc/.storage
+fi
+
+if [ -e $PACDIR/dialuppasswd.param ]; then
+    echo "DIALUP_PASSWORD=$ts_dialuppasswd" >> ./tmp-tree/etc/thinstation.defaults
+fi
+
+
+if [ -e $PACDIR/sambapasswd.param ] && [ -e $PACDIR/samba-base.* ] ; then
+    echo $ts_sambapasswd > $TOOLSDIR/smbpass
+    echo $ts_sambapasswd >> $TOOLSDIR/smbpass
+    $TOOLSDIR/smbpasswd -L -c $TOOLSDIR/smb.conf -a root -s < $TOOLSDIR/smbpass > /dev/null 2>&1
+    mv $TOOLSDIR/smbpassword ./tmp-tree/lib/smbpassword.ro
+    mv $TOOLSDIR/secrets.tdb ./tmp-tree/lib/secrets.tdb.ro
+    rm $TOOLSDIR/smbpass
+# - encrypt samba password for NX use. Don't use > with nxpasswd!
+    echo $ts_sambapasswd | $TOOLSDIR/nxpasswd > ./tmp-tree/lib/nxpasswd.ro
+fi
+
+
+echo -e "Setting basepath"
+
+if [ -e $PACDIR/basename.param ]; then
+  if [ -e $PACDIR/basename.param ]; then
+    echo "BASENAME=$ts_basename" >> ./tmp-tree/etc/thinstation.defaults
+  elif [ "$ts_basename" = "." ] ; then
+    echo "BASENAME=" >> ./tmp-tree/etc/thinstation.defaults
+  fi
+else
+    echo "BASENAME=thinstation" >> ./tmp-tree/etc/thinstation.defaults
+fi
+
+if [ -e $PACDIR/basepath.param ]; then
+    echo "BASEPATH=$ts_basepath" >> ./tmp-tree/etc/thinstation.defaults
+else
+    echo "BASEPATH=." >> ./tmp-tree/etc/thinstation.defaults
+fi
+
+if [ -e $PACDIR/baseurl.param ] ; then
+ echo "BASEURL=$ts_baseurl" >> ./tmp-tree/etc/thinstation.defaults
+fi
+
+echo -e "Checking for Key File"
+
+if [ -e $PACDIR/keyfile.param ]; then
+	if [ -e "$ts_keyfile" ] ; then
+		if [ ! -e ./tmp-tree/etc/.ssh ] ; then
+			mkdir ./tmp-tree/etc/.ssh
+		fi
+		cp $ts_keyfile ./tmp-tree/etc/.ssh
+	else
+		echo "Key file not found, build aborted."
+		remove_files
+       		exit 1
+	fi
+fi
+
+echo -e "Checking for Desktop background"
+
+if [ -e $PACDIR/desktop.param ]; then
+	cp $ts_desktop ./tmp-tree/etc/background-1024x768.jpg
+fi
+
+echo -e "Checking for Known Hosts File"
+
+if [ -e $PACDIR/knownhosts.param ]; then
+	if [ -e "$ts_knownhosts" ] ; then
+		if [ ! -e ./tmp-tree/etc/.ssh ] ; then
+			mkdir ./tmp-tree/etc/.ssh
+		fi
+		cp $ts_knownhosts ./tmp-tree/etc/.ssh
+		echo "" >> ./tmp-tree/etc/.ssh/`basename $ts_knownhosts`
+	else
+		echo "Known Hosts file not found, build aborted."
+		remove_files
+       		exit 1
+	fi
+fi
+
+echo -e "Checking for ICA encryption support"
+
+if [ -e $PACDIR/icaencryption.param ]; then
+    if [ "`make_caps $ts_icaencryption`" != "TRUE" ] ; then
+	    if [ -e $PACDIR/ica.package ] ; then 
+		    rm ./tmp-tree/usr/lib/ICAClient/libctxssl.so
+	    elif [ -e $PACDIR/ica.pkg ] ; then
+		    rm $PKGDIR/ica/usr/lib/ICAClient/libctxssl.so
+	    fi
+    fi
+fi
+
+echo -e "Checking for Debug Verbosity"
+
+if [ -e $PACDIR/bootverbosity.param ]; then
+	echo "DEBUGLEVEL=$ts_bootverbosity" > ./tmp-tree/etc/DEBUGLEVEL
+fi
+
+get_debug_level $ts_bootverbosity
+
+echo -e "Checking for Halt on Error Override"
+
+if [ -e $PACDIR/haltonerror.param ]; then
+	echo "export HALTONERROR=$ts_haltonerror" >> ./tmp-tree/etc/thinstation.defaults
+else
+	echo "export HALTONERROR=true" >> ./tmp-tree/etc/thinstation.defaults
+fi
+
+if [ -z "$DEBUG_KERNEL" ] ; then
+  	DEBUGCONSOLE="console=ttyS3"
+fi
+
+# Removes extended locale libs if not selected
+
+if [ -n "$ts_forcelocales" ] ; then
+	ts_fulllocales=true
+fi
+
+if [ -z "$ts_fulllocales" ] ; then
+	if [ ! -e $PACDIR/fulllocales.param ]; then
+		ts_fulllocales="false"
+	fi
+fi
+
+if [ "$ts_fulllocales" != "true" ] ; then
+      for filename in `find $PKGDIR -maxdepth 1 -name "keymaps-*" && echo "./tmp-tree"`
+      do
+        if [ -e $filename/full ] ; then
+           rm -R $filename/full
+ 	fi
+      done
+else
+	 for filename in `find $PKGDIR -maxdepth 1 -name "keymaps-*" && echo "./tmp-tree"`
+	 do
+           if [ -e $filename/full ] ; then
+	     cp -Rp $filename/full/* $filename/
+	     rm -R $filename/full
+           fi
+         done
+fi
+
+# Removes uneeded keymap package types
+# Also places the keymap components in the correct package
+
+echo -e "Checking if extended locale support is enabled\n"
+
+for packagename in x-common base rdesktop rdesktopsvn blackbox ica_wfc
+do
+	if [ -e $PACDIR/$packagename.pkg ]; then
+	   for filename in `find $PKGDIR -maxdepth 1 -name "keymaps-*" && echo "./tmp-tree"`
+	   do
+	       if [ -e $filename/$packagename ] ; then
+		 echo "Coping extended $packagename to pkg file"
+	         cp -Rp $filename/$packagename/* $PKGDIR/$packagename
+	         rm -R $filename/$packagename
+               fi
+           done
+	elif [ -e $PACDIR/$packagename.package ] ; then
+	   for filename in `find $PKGDIR -maxdepth 1 -name "keymaps-*" && echo "./tmp-tree"`
+	   do
+	       if [ -e $filename/$packagename ] ; then
+		 echo "Coping extended $packagename to inbuilt image"
+	         cp -Rp $filename/$packagename/* ./tmp-tree
+	         rm -R $filename/$packagename
+               fi
+           done
+	else
+	   for filename in `find $PKGDIR -maxdepth 1 -name "keymaps-*" && echo "./tmp-tree"`
+	   do
+	       if [ -e $filename/$packagename ] ; then
+	         rm -R $filename/$packagename
+	       fi
+           done
+	fi
+done
+
+# Checks for and removes any remaining keymap.pkg files
+# It does this as keymaps are merged into there parent files
+
+for filename in `find $PKGDIR -maxdepth 1 -name "keymaps-*"`
+do
+	rm -R $filename
+	keymapname=`basename $filename`
+	rm $PACDIR/$keymapname.pkg
+done
+
+# Adding library dependencies
+
+lib_dependencies
+
+
+# Adding dependent modules
+
+echo -e "\nBuilding dependencies for Modules...\n"
+
+KERNEL_VERSION=`ls ./kernel/vmlinuz-2.* | cut -f2 -d-`
+$TOOLSDIR/depmod -b ./kernel -e -F kernel/System.map -n $KERNEL_VERSION > ./modules.dep
+
+cat ./modules.dep | sed '/^[	 ]*$/d' | sed '/[\]/ N;s/[\]\n//g' \
+	| sed '/[\]/ N;s/[\]\n//g'  > ./modules.tmp
+
+module_dependencies
+
+
+# Adding additional modules which are dependencies of other modules
+
+echo -e "\nAdding module dependencies on other modules not picked up by depmod\n"
+for pkgname in `echo "./tmp-tree" && find $MODDIR/ -mindepth 1 -maxdepth 1`
+do
+  (ls ./kernel/dependencies_module/ ) |
+  while read module
+  do
+   if [ -e $pkgname/lib/modules/$module.ko ] || [ -e ./tmp-tree/lib/modules/$module.ko ] ; then
+     (cat ./kernel/dependencies_module/$module ) |
+     while read type name
+     do
+       case $type in
+       module)
+	  if [ ! -e ./tmp-tree/lib/modules/$name.ko ] && [ ! -e $pkgname/lib/modules/$name.ko ]  ; then
+            if [ -e ./tmp-tree/lib/modules/$module.ko ] ; then
+	      echo "Module : $name"
+	      cp `find ./kernel/modules/ -follow -name "$name.ko"` ./tmp-tree/lib/modules/
+	      echo $name >> ./tmp-tree/etc/modules
+	      echo "$name.ko" >> ./tmp-tree/modules.final
+	    elif [ -e $pkgname/lib/modules/$module.ko ] ; then
+              echo "Module-pkg $name"
+	      cp `find ./kernel/modules/ -follow -name "$name.ko"` $pkgname/lib/modules
+	      echo $name >> $pkgname/etc/`basename $pkgname`.modules
+	      echo "$name.ko" >> $pkgname/modules.final
+            fi
+   	 fi
+       ;;
+       *)
+         continue
+       ;;
+       esac
+     done
+   fi
+  done
+done
+
+# Adding additional modules which are dependencies of packages 
+
+echo -e "\nAdding module dependencies on other packages\n"
+(ls ./kernel/dependencies_package/ ) |
+while read name
+do
+     (cat ./kernel/dependencies_package/$name ) |
+     while read module
+     do
+	  if [ -e $PACDIR/$name.package ] ; then
+            if [ ! -e ./tmp-tree/lib/modules/$module.ko ] ; then
+	      echo "Package : $name   Module: $module"
+	      cp `find ./kernel/modules/ -follow -name "$module.ko"` ./tmp-tree/lib/modules/
+	      echo "$module.ko" >> ./tmp-tree/modules.final
+            fi
+	  elif [ -e $PACDIR/$name.pkg ] ; then
+	    if [ ! -e $PKGDIR/$name/lib/modules/$module.ko ] ; then
+              echo "Pkg     : $name   Module: $module"
+	      if [ ! -e $PKGDIR/$name/lib ] ; then
+	              mkdir $PKGDIR/$name/lib
+	      fi
+	      if [ ! -e $PKGDIR/$name/lib/modules ] ; then
+	              mkdir $PKGDIR/$name/lib/modules
+	      fi
+	      cp `find ./kernel/modules/ -follow -name "$module.ko"` $PKGDIR/$name/lib/modules
+	      echo "$module.ko" >> $PKGDIR/$name/modules.final
+            fi
+          fi
+     done
+done
+
+
+#Additional Module dependencies check for new modules
+
+echo -e "\nChecking for additional dependencies for Modules...\n"
+
+module_dependencies 
+rm ./modules.tmp
+rm ./modules.dep
+
+
+# Add user defined defaults
+if [ -e ./$ts_defaultconfig ] && [ ! -z "$ts_defaultconfig" ] ; then
+	cat ./$ts_defaultconfig >> ./tmp-tree/thinstation.defaults
+	sed -e 's/\//g' ./tmp-tree/thinstation.defaults >> ./tmp-tree/etc/thinstation.defaults
+	rm ./tmp-tree/thinstation.defaults
+fi
+
+# Building Sample Thinstation.conf file
+
+echo -e "\nBuilding Sample Thinstation.conf File\n"
+
+mkdir ./tmp-tree/conf
+echo > ./thinstation.conf.sample
+for filename in `find $PKGDIR -maxdepth 1 -name "*" && echo "./tmp-tree"`
+do
+	if [ -e $filename/build/conf ] ; then
+		cp $filename/build/conf/* ./tmp-tree/conf
+	fi
+done
+for filename in `ls ./tmp-tree/conf | sort`
+do
+		cat ./tmp-tree/conf/$filename >> ./thinstation.conf.sample
+done
+
+# Check for ACPI Support
+
+if [ ! -e $PACDIR/acpi.* ]; then
+	echo -e "\nAdvanced Configuration and Power Interface support disabled\n"
+	kernel_acpi_support=false
+else
+	echo -e "\nAdvanced Configuration and Power Interface support enabled\n"
+fi
+
+
+
+# Clean up unncessary folder
+
+rm -Rf $PACDIR
+rm ./tmp-tree/dependencies
+rm -Rf ./tmp-tree/build
+rm -Rf ./tmp-tree/conf
+
+# Adding contributed modifications
+
+echo -e "\nAdding contributed files\n"
+
+for filename in `find $PKGDIR -maxdepth 1 -name "*" && echo "./tmp-tree"`
+do
+	if [ -e $filename/build/contribs ] ; then
+		for contrib in `find $filename/build/contribs -type f -name "*"`
+		do
+			contribname=`basename $contrib`
+			destdir=`dirname $contrib | sed -e "s/\/build\/contribs//g"`
+			basedir=`dirname $contrib | sed -e "s/.*contribs//g"`
+			# Either appends it with cat or copies it in, pretty basic at 
+			# present, could be expanded later
+			if [ -e $destdir/$contribname ] ; then
+				echo "Appending contributed $contribname to $filename"
+				cat $contrib >> $destdir/$contribname
+			elif [ -e ./tmp-tree/$basedir/$contribname ] ; then
+				echo "Appending contributed $contribname to tmp-tree"
+				cat $contrib >> ./tmp-tree/$basedir/$contribname
+			else
+				echo "File not found, build aborted."
+			  	remove_files
+       			   	exit 1 
+			fi
+		done
+		rm -R $filename/build/contribs
+	fi
+done
+
+# Building PKG packages
+
+echo -e "\nBuilding PKG Packages\n"
+
+for filename in `ls -1 $PKGDIR/` ; do
+	cd $PKGDIR/$filename
+	if [ -e build ] ; then
+		rm -Rf build
+	fi
+	echo "Building $filename.pkg"
+	tar -cz * > ../$filename.pkg
+	cd ../../..
+        # lose the base package end empty lines for *.dep files
+        cat packages/$filename/dependencies > $PKGDIR/$filename.dep
+        sed -i -e "/base/d" $PKGDIR/$filename.dep 
+        sed -i "/^$/d" $PKGDIR/$filename.dep 
+#
+	rm -Rf $PKGDIR/$filename
+	if [ -n "$PKGFILES" ] ; then
+		PKGFILES="$PKGFILES $filename"
+	else
+		PKGFILES="$filename"
+	fi
+done
+
+# Building Module packages
+
+echo -e "\nBuilding Module PKG Packages\n"
+
+for filename in `ls -1 $MODDIR/` ; do
+	cd $MODDIR/$filename
+	echo "Building $filename.mpkg"
+	tar -cz * > ../$filename.mpkg
+	cd ../../..
+	rm -Rf $MODDIR/$filename
+	mv $MODDIR/$filename.mpkg $PKGDIR
+	if [ -n "$MODFILES" ] ; then
+		MODFILES="$MODFILES $filename"
+	else
+		MODFILES="$filename"
+	fi	
+done
+
+rmdir $MODDIR
+}
+
+remove_files
+
+# Check OS for required commands. If some are missing the build system may fail silently.
+echo -n "Checking for required commands... "
+
+required_commands="awk basename cat chmod comm cp cut diff dirname du echo file find ldd ln ls mkdir mv rm rmdir sed sleep sort tar touch"
+
+# Check for sed first
+sed --version >/dev/null
+if [ $? -eq 127 ]; then
+    echo "FAIL"
+    echo "Your system does not have the 'sed' command"
+    echo "This build system requires it; aborting build"
+    exit 1
+fi
+
+missing_commands=""
+for command in $required_commands ; do
+    found=0
+    for x in `echo $PATH|sed "s/:/ /g"`; do if [ -x $x/$command ]; then found=1; fi; done
+    if [ $found -eq 0 ]; then missing_commands="$missing_commands $command"; fi
+done 
+if [ -n "$missing_commands" ]; then
+    echo "FAIL"
+    echo "You are missing the following UNIX commands:$missing_commands"
+    echo "This build system requires them; aborting build"
+    exit 1
+fi
+
+required_tools="convert cryptmd5 depmod mkisofs mknbi/mkelf-linux mksquashfs smbpasswd splash vncpasswd"
+for tool in $required_tools ; do
+    if [ ! -x "$TOOLSDIR/$tool" ]; then missing_tools="$missing_tools $TOOLSDIR/$tool"; fi
+done
+if [ -n "$missing_tools" ]; then
+    echo "FAIL"
+    echo "Your Thinstation installation is broken; the following needed tools"
+    echo "are missing:$missing_tools"
+    echo "This build system requires them; aborting build"
+    exit 1
+fi
+echo "OK"
+
+ 
+
+# Get positional parameters
+until [ -z "$1" ]
+do
+	if [ "$1" = "--license" ] ; then
+		shift
+		LICENSE=$1
+		shift
+	elif [ "$1" = "--buildtime" ] ; then
+		shift
+		BUILDTIME=$1
+		shift
+	elif [ "$1" = "--noimages" ] ; then
+		shift
+		NOIMAGES=true
+	elif [ "$1" = "--help" ] ; then
+		shift
+		showhelp
+		exit 0
+	elif [ "$1" = "--autodl" ] ; then
+		shift
+		AUTODL=true
+	elif [ "$1" = "--removeall" ] ; then
+		shift
+		REMOVEALL=true
+	elif [ "$1" = "--regenconf" ] ; then
+		shift
+		REGENCONF=true
+	elif [ "$1" = "--savedir" ] ; then
+		shift
+		SAVEDIR=true
+	elif [ "$1" = "--update" ] ; then
+		shift
+		UPDATE=true
+	else
+		CONFIG_FILE=$1
+		shift
+	fi
+done
+
+if [ -s ./packages/base/linuxrc ]; then
+  echo "Symbolic Links Ok"
+else
+  echo
+  echo "Symbolic Links not found, error.  You must untar Thinstation" \
+  "onto a file system which supports symbolic links.  Don't unzip on a" \
+  "Windows system."
+  echo
+  echo "Exiting build, ERROR!!"
+  remove_files
+  exit 1
+fi
+
+if [ -n "$CONFIG_FILE" ]; then
+    if [ ! -e $CONFIG_FILE ] ; then
+	echo "$CONFIG_FILE doesn't exist, ERROR!!"
+	remove_files
+	exit 1
+    fi
+else
+    CONFIG_FILE="build.conf"
+fi
+
+# Remove all commerical packages then exit
+
+if [ -n "$REMOVEALL" ]; then
+	remove_files
+	for package in `ls ./packages`
+	do
+	  if [ -e ./packages/$package/build/remove ] && [ -e ./packages/$package/build/installed ] ; then
+		  ./packages/$package/build/remove
+	  fi
+	done
+	echo "All commerical binaries removed, quitting."
+	exit 0
+fi
+
+# Run update for all packages with update script
+if [ -n "$UPDATE" ]; then
+	for package in `ls ./packages`
+	do
+	  if [ -e ./packages/$package/build/update ] ; then
+		  ./packages/$package/build/update
+	  fi
+	done
+	echo "All packages updated."
+	exit 0;
+fi
+
+# Copy all config files in conf directory
+if [ -n "$REGENCONF" ] ; then
+  rm ./conf/*.conf.sample > /dev/null 2>&1 
+  for filename in `ls ./packages`
+  do
+     if [ -e ./packages/$filename/build/conf ] ; then
+	for confname in `ls ./packages/$filename/build/conf/*`
+	do
+		name=`basename $confname | cut -c3-`
+		cp $confname ./conf/$name.conf.sample
+	done
+     fi
+  done
+  exit 0
+fi
+
+# Build Image unless adding a buildtime file, for TS-O-Matic
+if [ -z "$BUILDTIME" ] ; then
+	main
+	make_initrd
+else
+	if [ -e "$BUILDTIME" ] ; then
+		mkdir ./tmp-tree
+		sed -e 's/\//g' "$BUILDTIME" >> ./tmp-tree/thinstation.buildtime
+		. $INITDIR/kernel_parameters
+		$TOOLSDIR/mksquashfs ./tmp-tree/ $INITDIR/initrd -all-root
+	else
+		echo -e "\nError, no buidtime file found, aborting build"
+		remove_files
+		exit 1
+	fi
+fi
+
+if [ -z "$kernel_parameters" ] ; then
+	KERNEL_PARAMETERS="$KERNEL_PARAMETERS $DEBUGCONSOLE"
+ 	echo "kernel_parameters=\"$KERNEL_PARAMETERS\"" > $INITDIR/kernel_parameters
+else
+	KERNEL_PARAMETERS="$kernel_parameters"
+fi
+
+# Add acpi support to kernel
+
+if [ -n "$kernel_acpi_support" ] ; then
+	KERNEL_PARAMETERS="$KERNEL_PARAMETERS acpi=off"
+fi
+
+# Skips Images if NOIMAGES is set, useful for TS-O-Matic
+if [ -z "$NOIMAGES" ] ; then
+ splash_setup
+ IMAGESIZE=`du -k $INITDIR/initrd | cut -f1 -d"	"`
+ if [ $IMAGESIZE -gt $MAXIMAGE ] ; then
+	    echo "ERROR, Image file is too Big, maximum size is $MAXIMAGE remove" 
+	    echo "some packages!"
+	    echo "Build Aborted!!"
+	    echo
+	    rm $INITDIR/initrd
+	    remove_files
+	    exit 1 
+ fi
+
+# Making all image types
+ for image in loadlin syslinux pxe iso nbi
+ do
+  echo -e "\nMaking boot image for $image Type....\n"
+  case $image in
+  loadlin)
+    IMAGEDIR=boot-images/loadlin
+    cat $IMAGEDIR/ts.bat.tpl | sed -e "s/\$KERNEL_PARAMETERS/$KERNEL_PARAMETERS/g"> $IMAGEDIR/ts.bat
+    cp kernel/vmlinuz $IMAGEDIR
+    cp -p $INITDIR/initrd $IMAGEDIR
+    addpkgs $IMAGEDIR
+    ;;
+  syslinux)
+    IMAGEDIR=boot-images/syslinux
+    cat $IMAGEDIR/syslinux.cfg.tpl |sed -e "s/\$KERNEL_PARAMETERS/$KERNEL_PARAMETERS/g"> $IMAGEDIR/syslinux.cfg
+    cp kernel/vmlinuz $IMAGEDIR
+    cp -p $INITDIR/initrd $IMAGEDIR
+    addpkgs $IMAGEDIR
+    cd $IMAGEDIR && tar cfhvz syslinux-everything.tar.gz * > /dev/null 2>&1 && mv syslinux-everything.tar.gz ../ && cd - > /dev/null 2>&1
+    ;;
+  pxe)
+    IMAGEDIR=boot-images/pxe
+    cat $IMAGEDIR/pxelinux.cfg/default.tpl | sed -e "s/\$KERNEL_PARAMETERS/$KERNEL_PARAMETERS/g"> $IMAGEDIR/pxelinux.cfg/default
+    cp kernel/vmlinuz $IMAGEDIR
+    cp -p $INITDIR/initrd $IMAGEDIR
+    addpkgs $IMAGEDIR
+    cd $IMAGEDIR && tar cfhvz pxe-everything.tar.gz * > /dev/null 2>&1 && mv pxe-everything.tar.gz ../ && cd - > /dev/null 2>&1
+    ;;
+  iso)
+    IMAGEDIR=boot-images/iso
+#    echo "timeout 0
+#    default vmlinuz
+#    append initrd=initrd load_ramdisk=1 ramdisk_blocksize=4096 \
+#    root=/dev/ram0 $KERNEL_PARAMETERS" > $IMAGEDIR/source/isolinux.cfg
+#Add this line:
+    cat $IMAGEDIR/source/isolinux.cfg.tpl | sed -e "s/\$KERNEL_PARAMETERS/$KERNEL_PARAMETERS/g"> $IMAGEDIR/source/isolinux.cfg
+#
+    if [ -e $IMAGEDIR/source/vmlinuz ] ; then
+	    rm $IMAGEDIR/source/vmlinuz
+    fi
+    ln -s ../../../kernel/vmlinuz $IMAGEDIR/source/vmlinuz
+
+    addpkgs $IMAGEDIR/source
+
+    $TOOLSDIR/mkisofs -o $IMAGEDIR/thinstation.iso \
+        -b isolinux.bin\
+	-f \
+	-c boot.cat \
+	-no-emul-boot \
+	-boot-load-size 4 \
+	-boot-info-table \
+	-joliet \
+	-rock \
+	$IMAGEDIR/source
+    ;;
+  nbi)
+    IMAGEDIR=boot-images/etherboot
+    $TOOLSDIR/mknbi/mkelf-linux --relocseg=0x8000 --format=nbi --rootdir=/dev/ram0  --append="ramdisk_blocksize=4096 $KERNEL_PARAMETERS dumbcon=4" --target=linux --output=$IMAGEDIR/thinstation.nbi kernel/vmlinuz $INITDIR/initrd
+     ;;
+  esac
+ done
+fi
+
+remove_files
+
+# Echo PKG variables for .conf file to screen
+
+echo -e "\nNotes about build:"
+if [ -n "$PKGFILES" ] ; then
+	echo "Your PKG_PACKAGES for the .conf file should be"
+	echo -e "PKG_PACKAGES=\"$PKGFILES\"\n"
+fi
+if [ -n "$MODFILES" ] ; then
+	echo "Your MOD_PACKAGES for the .conf file should be"
+	echo "MOD_PACKAGES=\"$MODFILES\""
+fi
+
+echo -e "\nBuild Complete!"
+
