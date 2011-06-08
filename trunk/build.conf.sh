@@ -341,7 +341,7 @@ module ext2             	# Ext2 file system support
 module ext3            		# Ext3 file system support
 module supermount       	# Supermount support for auto unmounting of removable media
 module nfs             	# NFS file system support
-module smbfs           	# Samba client FS Support, allows you to mount smb filesystems
+#module smbfs           	# Samba client FS Support, allows you to mount smb filesystems
 
 
 #################################################
@@ -373,7 +373,7 @@ package sound-nasd		#  sound on your thin client from another computer or
 				#  this server. You don't need anything else. Otherwise choose from
 				#  Xfree 3 or 4 (4 is recommended).
 #package xf3-svga		# XF86_SVGA 3.3.6 server
-package xf3-s3			# XF86_S3 3.3.6 server
+#package xf3-s3			# XF86_S3 3.3.6 server
 #package xf3-vmware		# VMWare X server for development
 #package xorg6vnc         	# Xorg VNC Server Module. With this package you can
                         	#  connect to the Thinstation client's desktop from a java
@@ -470,13 +470,13 @@ package vncviewer		# VNC client (vncviewer)
 #package tarantella		# Tarantella client support
 #package ica_wfc         	# Citrix ICA manager ver. 11
 #package xnest			# XDM in a window client
-package rxvt            	# Light Xterm Client (vt102)
+#package rxvt            	# Light Xterm Client (vt102)
 package xterm           	# Xterm Client (vt220)
 package ssh 			# Secure Shell client
 #package tn5250          	# 5250 terminal emulator
-#package dillo 			# Dillo light web browser
-package nx              	# No Machine NX client
-package 2x                     # 2X client
+package dillo 			# Dillo light web browser
+#package nx              	# No Machine NX client
+#package 2x                     # 2X client
 #package java			# Java runtime
 #package firefox		# Firefox web browser ver. 3.0.x
 #package flash			# Flash plug-in ver. 9.0
@@ -498,7 +498,7 @@ package xtdesk         		# Adds icons to desktop
 package ttf-freefont		# GNU freefont true type font. Improves the looks of icewm, firefox etc. (3.5 MB)
 
 #!!Other services
-package www 			# Web access to client.  From a browser: "http://<IP number>"
+#package www 			# Web access to client.  From a browser: "http://<IP number>"
                         	#  The standard page is for general user settings, administrative access
                         	#  is on port 6800.
 #package lp_server		# Remote printing daemon (JetDirect compatible)
@@ -544,7 +544,7 @@ param sambapasswd    green  			# Password for samba shares when using user mode 
 param bootlogo       true            			# Backgound picture during boot
 param bootresolution 1024x768				# Resolution used during Thinstation boot
 param desktop	     ./background.jpg			# Background image for the desktop. More images in backgrounds/
-param defaultconfig  thinstation.conf.buildtime.sh
+param defaultconfig  thinstation.conf.buildtime
 #thinstation.conf.buildtime # The file with default setup.  No other config file is found
                                                  	#  during boot.
 param basename       greenplant			# Used for all config/tftp/scp file names
