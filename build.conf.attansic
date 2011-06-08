@@ -1,0 +1,6 @@
+# add into the section titled "Ethernet 10-100 Mbit Modules"
+module atl2	# Attansic L2
+# add into the section titled "Ethernet 1000 Mbit Modules":
+module atl1	# Attansic L1
+module atl1e	# Attansic L1e
+
