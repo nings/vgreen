@@ -40,7 +40,7 @@
 module pcm           		# PCMCIA Cards
 module serial           	# Serial Device Support
 module acpi           		# Advanced Configuration and Power Interface support
-module pcspkr			# PC Speaker support
+#module pcspkr			# PC Speaker support
 
 #!!!AGP Modules
 module agpgart			# AGP bus module for use with AGP video cards
@@ -50,13 +50,13 @@ module agpgart			# AGP bus module for use with AGP video cards
 module ati-agp          	# ATI chipset support
 #module efficeon-agp     	# Transmeta Efficeon support
 module intel-agp        	# Intel 440LX/BX/GX, I8xx and E7x05 chipset support
-module nvidia-agp       	# NVIDIA nForce/nForce2 chipset support
+#module nvidia-agp       	# NVIDIA nForce/nForce2 chipset support
 #module sis-agp          	# SiS chipset support
 #module via-agp          	# VIA chipset support
 
 #!!!PCMCIA/CardBus bridges
 # Remember: Only include what you really need!
-module yenta_socket  		# CardBus card and (Yenta) bridge support (Very common)
+#module yenta_socket  		# CardBus card and (Yenta) bridge support (Very common)
 #module i82365        		# Intel i82365 compatible ISA-bus bridge support
 #module tcic          		# Databook TCIC host bridge support (old systems)
 
@@ -79,8 +79,8 @@ module 8139too          	# RealTek RTL-8139 PCI Fast Ethernet Adapter support. V
 #module ac3200          	# Ansel Communications EISA 3200 support
 #module amd8111e        	# AMD 8111 (new PCI lance) support
 #module at1700          	# AT1700/1720 support
-#module atl2			# Attansic L2. Atheros(R) L2 Ethernet Network Driver ver. 1.0.40.3
-#module b44             	# Broadcom 4400 ethernet support
+#module atl2			# Attansic L2. Atheros(R) L2 Ethernet Network Driver (v. 1.0.40.3)
+#module b44             	# Broadcom 4400 ethernet support (v. 1.00g)
 #module cs89x0          	# CS89x0 support
 #module de4x5           	# Generic DECchip & DIGITAL EtherWORKS PCI/EISA
 #module de2104x         	# Early DECchip Tulip (dc2104x) PCI support
@@ -127,29 +127,32 @@ module via-rhine        	# VIA Rhine support (both Rhine I and II). Common in in
 
 #!!!Ethernet 1000 Mbit Modules
 #module acenic         		# Alteon AceNIC/3Com 3C985/NetGear GA620 Gigabit support
-#module atl1			# Attansic L1. Atheros 1000M Ethernet Network Driver version=1.2.40.3
-#module atl1e			# Attansic L1e. Atheros(R) AR8121/AR8113/AR8114 PCI-E Ethernet Network Driver ver. 1.0.1.0
-#module bnx2           		# Broadcom NetXtremeII support
+#module atl1			# Attansic L1. Atheros 1000M Ethernet Network Driver (v. 1.2.40.3)
+#module atl1e			# Attansic L1e. Atheros(R) AR8121/AR8113/AR8114 PCI-E Ethernet Network Driver (v. 1.0.1.0)
+#module bnx2           		# Broadcom NetXtremeII support (v. 2.0.8e)
 #module dl2k           		# D-Link DL2000-based Gigabit Ethernet support
-module e1000          		# Intel(R) PRO/1000 Gigabit Ethernet support (PCI)
-#module e1000e			# Intel(R) 82567LM (PCIe)
+module e1000          		# Intel(R) PRO/1000 Gigabit Ethernet support (PCI) (v. 8.0.23)
+#module e1000e			# Intel(R) 82567LM (PCIe) (v. 1.2.17-NAPI)
 #module ns83820        		# National Semiconductor DP83820 support
 #module hamachi        		# Packet Engines Hamachi GNIC-II support
 #module yellowfin      		# Packet Engines Yellowfin Gigabit-NIC support
 #module	r8101			# Realtek 8101 Gigabit Ethernet support
 #module r8168          		# Realtek 8168 Gigabit Ethernet support
-module r8169          		# Realtek 8169 Gigabit Ethernet support - version 6.011_2.6.16.5
+module r8169          		# Realtek 8169 Gigabit Ethernet support (v. 6.011)
 #module sis190        		# SiS190/SiS191 gigabit ethernet support
 #module skge       		# New SysKonnect GigaEthernet support
 #module sk98lin        		# Marvell Yukon Chipset / SysKonnect SK-98xx Support
 #module sky2        		# SysKonnect Yukon2 support
-#module tg3            		# Broadcom Tigon3 ver. 3.99k
+#module tg3            		# Broadcom Tigon3 (v. 3.110g)
 #module via-velocity   		# VIA Velocity support
 
 #!!!Ethernet 10000 Mbit Modules
 #module cxgb           		# Chelsio 10Gb Ethernet support
-#module ixgb           		# Intel(R) PRO/10GbE support
+#module ixgb           		# Intel(R) PRO/10GbE support (v. 1.0.135)
+#module igb			# Intel 82575/6 & 82580 (v. 2.3.4)
+#module ixgbe			# (v. 3.0.12-NAPI)
 #module s2io           		# S2IO 10Gbe XFrame NIC
+#module bnx2x			# Broadcom 57710 and 57711(e)
 
 #!!!Token Ring modules
 #module 3c359          		# 3Com 3C359 Token Link Velocity XL adapter support 
@@ -267,9 +270,9 @@ module ath_pci        		#  Madwifi Support
 #!!!PCI
 #
 
-module snd-ali5451                     # AC97 intergrated device with ALi M5451 Audio Controller
+#module snd-ali5451                     # AC97 intergrated device with ALi M5451 Audio Controller
                                         #  (M1535/M1535D/M1535+/M1535D+ south bridges)
-module snd-atiixp                      # AC97 intergrated device with ATI chipsets
+#module snd-atiixp                      # AC97 intergrated device with ATI chipsets
                                         #  (ATI IXP 150/200/250/300/400)
 #module snd-au8810                      # Aureal Advantage soundcards
 #module snd-au8820                      # Aureal Vortex soundcards
@@ -290,7 +293,8 @@ module snd-nm256                       # NeoMagic NM256AV/ZX chips
 #module snd-rme96                       # RME Digi96, Digi96/8 and Digi96/8 PRO/PAD/PST soundcards
 #module snd-rme9652                     # RME Hammerfall (RME Digi9652/Digi9636) soundcards
 #module snd-hdsp                        # RME Hammerfall DSP Audio soundcards
-module snd-hda-intel                   # Intel HD Audio
+module snd-hda-intel model=auto position_fix=1       # Intel HD Audio with default parameters - you may need to change these
+					# Further help: http://wiki.sabayon.org/index.php?title=HOWTO:_Resolve_Problems_with_HDA-Intel_Sound_Cards
 #module snd-trident                     # Trident 4D-Wave DX/NX or SiS 7018 chips
 #module snd-ymfpci                      # Yamaha PCI chips YMF724,YMF724F,YMF740,YMF740C,YMF744,YMF754
 #module snd-als4000                     # Avance Logic ALS4000 chips
@@ -313,7 +317,7 @@ module snd-via82xx                     # AC97 intergrated device with VIA chipse
 #!!USB Devices
 module usb-hid			# Needed for USB keyboards and mice  
 module usb-storage      	# Needed for USB-Sticks
-module usb-printer      	# Needed for USB-Printers
+#module usb-printer      	# Needed for USB-Printers
 module usb-cdrom               # Needed for USB CD-Rom Drives
 
 #!!Storage Devices
@@ -368,13 +372,15 @@ package sound-nasd		#  sound on your thin client from another computer or
 #package iptables		# IP Tables support
 
 #!!X related
-#package xorg6-tinyx		# TinyX Xvesa server (for low memory machines).
-				#  Works with ICA too, but is slower. Don't choose any X modules with
-				#  this server. You don't need anything else. Otherwise choose from
-				#  Xfree 3 or 4 (4 is recommended).
+# XFree86 ver. 3 drivers. Not recommended for normal use. Really old hardware only.
 #package xf3-svga		# XF86_SVGA 3.3.6 server
 #package xf3-s3			# XF86_S3 3.3.6 server
 #package xf3-vmware		# VMWare X server for development
+#
+#package xorg6-tinyx		# TinyX Xvesa server (for low memory machines).
+				#  Works with ICA too, but is slower. Don't choose any X modules with
+				#  this server. You don't need anything else. Otherwise choose from
+				#  Xfree 3 or regular xorg (xorg is recommended).
 #package xorg6vnc         	# Xorg VNC Server Module. With this package you can
                         	#  connect to the Thinstation client's desktop from a java
                         	#  browser at "http://<TS ip>:5800
@@ -384,7 +390,7 @@ package sound-nasd		#  sound on your thin client from another computer or
 # This never gets old: only include what you really need!
 #package xorg6-apm           		# Alliance ProMotion video driver 
 #package xorg6-ark           		# Ark Logic video driver
-package xorg6-ati            		# ATI video driver
+#package xorg6-ati            		# ATI video driver
 #package xorg6-chips         		# Chips and Technologies video driver 
 #package xorg6-cirrus        		# Cirrus Logic video driver
 #package xorg6-cyrix         		# Cyrix video driver
@@ -396,7 +402,7 @@ package xorg6-i810	   		# Intel 8xx integrated graphics chipsets
 #package xorg6-neomagic      		# Neomagic video driver 
 #package xorg6-nsc           		# Nsc video driver 
 package xorg6-nv            		# NVIDIA video driver
-package xorg6-nvidia			# Driver for modern nVidia cards (ver. 185.18.14)
+#package xorg6-nvidia			# Driver for modern nVidia cards (ver. 185.18.14)
 #package xorg6-r128           		# ATI Rage 128 video driver 
 package xorg6-radeon        		# ATI RADEON video driver 
 #package xorg6-rendition     		# Rendition video driver 
@@ -461,41 +467,42 @@ package keymaps-en_us   	# English-United States
 
 #!Applications
 #!!Connection Package types.  Choose *at least* one!
-package rdesktop		# X RDP client for Windows Terminal Services (ver 1.6). Conflicts with rdesktop-svn.
-#package rdesktop-svn           # Experimental version of rdesktop as of 31th Mar. 2010. Conflicts with rdesktop 1.6.
-#package rdesktop_svga   	# SVGA RDP client. This is Version 1.1 of rdesktop. Only use this for low memory machines
+package rdesktop		# X RDP client for Windows Terminal Services (ver 1.6). Conflicts with rdesktopsvn.
+#package rdesktopsvn            # Experimental version (1609) of rdesktop as of February 2011. Conflicts with rdesktop 1.6.
 package freerdp			# FreeRDP ver. 0.8.2
+#package rdesktop_svga   	# SVGA RDP client. This is Version 1.1 of rdesktop. Only use this for low memory machines
 package vncviewer		# VNC client (vncviewer)
 #package ica			# Citrix ICA client ver. 11
 #package tarantella		# Tarantella client support
 #package ica_wfc         	# Citrix ICA manager ver. 11
-#package xnest			# XDM in a window client
-#package rxvt            	# Light Xterm Client (vt102)
-package xterm           	# Xterm Client (vt220)
+package xnest			# XDM in a window client
+package rxvt            	# Light Xterm Client (vt102)
+#package xterm           	# Xterm Client (vt220)
 package ssh 			# Secure Shell client
 #package tn5250          	# 5250 terminal emulator
 package dillo 			# Dillo light web browser
 #package nx              	# No Machine NX client
 #package 2x                     # 2X client
 #package java			# Java runtime
-#package firefox		# Firefox web browser ver. 3.0.x
+package firefox		# Firefox web browser ver. 3.6.x
 #package flash			# Flash plug-in ver. 9.0
+#package xpdf			# XPDF ver. 3.0.2
 #package kiosk			# Sets Firefox in kiosk mode (full screen requires a WM)
-#package thinlinc		# Cendio Thinlinc terminal client  ver. 3.0.0-1979
-package vmview			# Open-vmware view client 4.0.1
+#package thinlinc		# Cendio Thinlinc terminal client ver. 3.1.2-2751
+#package vmview			# Open-vmware view client 4.5.0
 
-#!!Window Managers. Choose no more than 1 window manager.
+#!!Window Managers. Choose no more than ONE window manager.
 # Not needed if you don't want to manage windows.
 package blackbox		# "Blackbox" window manager.  Makes TS a light workstation.
 package icewm			# "ICEWM" window manager.  Makes TS a light workstation.
 #package icewm-theme-bernstein	# Select ONE icewm theme package.
-package icewm-theme-bluecrux	# GTK2 style
+# package icewm-theme-bluecrux	# GTK2 style
 #package icewm-theme-liquid	# Mac "liquid" style
-#package icewm-theme-xp          # Windows XP style
+package icewm-theme-xp          # Windows XP style
 
 #!!Window Manager Utils
 package xtdesk         		# Adds icons to desktop
-package ttf-freefont		# GNU freefont true type font. Improves the looks of icewm, firefox etc. (3.5 MB)
+#package ttf-freefont		# GNU freefont true type font. Improves the looks of icewm, firefox etc. (3.5 MB)
 
 #!!Other services
 #package www 			# Web access to client.  From a browser: "http://<IP number>"
@@ -504,7 +511,7 @@ package ttf-freefont		# GNU freefont true type font. Improves the looks of icewm
 #package lp_server		# Remote printing daemon (JetDirect compatible)
 #package lpr             	# LPR Print Server, for use with samba-server package
 #package lprng          	# LPRng Print Server, supports network based printing
-package sshd 			# Dropbear secure shell server
+# package sshd 			# Dropbear secure shell server
 #package tftpd 			# Built in tftpd server. Useful for making a tftpserver
 				#  for thinstation on a WAN over a slow link.
 #package samba-server		# Samba server FS Support, allows you to share
@@ -526,8 +533,8 @@ package sshd 			# Dropbear secure shell server
 #!!Miscellaneous
 package e3 			# Basic text editor. e3vi = vi style, e3ws = word star (Borland),
 				# e3pi = pico, e3em = emacs
-package hwdetect		# Package with lshw.
-package debug			# Debug support, adds strace, lspci, lsusb, ethtool and other commands
+#package hwdetect		# Package with lshw.
+# package debug			# Debug support, adds strace, lspci, lsusb, ethtool and other commands
                         	# Not recommended for normal use.
 
 #!Parameters
@@ -535,7 +542,7 @@ package debug			# Debug support, adds strace, lspci, lsusb, ethtool and other co
 ### --- Miscellaneous Parameters --- ###
 ########################################
 #!!Basic
-param rootpasswd     green				# Do Change!  Console/telnet password for root
+param rootpasswd     green			# Do Change!  Console/telnet password for root
                                         		#  If this is enabled, Telnetd will be enabled.
 param xorgvncpasswd  green   			# VNC Access Password
 param storagepasswd  green  			# Password for storage server
@@ -544,18 +551,18 @@ param sambapasswd    green  			# Password for samba shares when using user mode 
 param bootlogo       true            			# Backgound picture during boot
 param bootresolution 1024x768				# Resolution used during Thinstation boot
 param desktop	     ./background.jpg			# Background image for the desktop. More images in backgrounds/
-param defaultconfig  thinstation.conf.buildtime
-#thinstation.conf.buildtime # The file with default setup.  No other config file is found
+param defaultconfig  thinstation.conf.buildtime.sh  	# The file with default setup.  No other config file is found
                                                  	#  during boot.
-param basename       greenplant			# Used for all config/tftp/scp file names
-param basepath       .               			# Used to determine path to tftp/scp files
+param basename       GreenStation     			# Used for all config/tftp/scp file names
+param basepath       .               			# Used to determine path to tftp/scp/wget files
+#param baseurl	      http://myserver.com/		# URL to use when getting config files from a web server
 #param keyfile        ./id_rsa       			# Path for private key file used for ssh/scp
 #param knownhosts     ./known_hosts  			# Path for ssh known_hosts file for ssh/scp
 param localpkgs      false				# to determine is PKG files are to be loaded locally
 param fulllocales    false      			# Use full locale support for packages
 param icaencryption  false      			# Use ica encryption support, add 290k to image
 #param haltonerror    false				# Will halt on error, default is true
-param bootverbosity   3	# Increased vebosity when booting TS
+param bootverbosity   3          			# Increased vebosity when booting TS
                                 			#   0 no verbose messages
                                 			#   1 boot
                                 			#   2 network
@@ -572,10 +579,10 @@ param bootverbosity   3	# Increased vebosity when booting TS
 #!!Advanced
 # Leave this alone unless you can't download (wget required on your Linux box):
 param icaurl         file://home/installs/linuxx86-11.100.158406.tar.gz
-param firefoxurl     http://thinstation.org/download/firefox/firefox-3.x-current.tar.bz2
+param firefoxurl     http://thinstation.org/download/firefox/firefox-3.6.x-current.tar.bz2
 param flashurl       http://thinstation.org/download/2.2/install_flash_player_9_linux.tar.gz
 param nxurl          http://thinstation.org/download/nx/nxclient-3.x-current.i386.tar.gz
 param 2xurl          http://downloads.2x.com/applicationserver/2xApplicationServerClient3.tar.bz2
-param javaurl        file://home/installs/jre-1_5_0_06-linux-i586.bin
+param javaurl        http://javadl.sun.com/webapps/download/AutoDL?BundleId=42723
 param tarantellaurl  file://home/installs/tnci3li.tar
 #param httpproxy      http://192.168.1.2:8080
