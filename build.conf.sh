@@ -66,63 +66,63 @@ module intel-agp        	# Intel 440LX/BX/GX, I8xx and E7x05 chipset support
 #!!Network
 
 #!!!Ethernet 10-100 Mbit Modules
-#module 3c501           	# 3c501 "EtherLink" support
-#module 3c503           	# 3c503 "EtherLink II" support
-#module 3c505           	# 3c505 "EtherLink Plus" support
-#module 3c507           	# 3c507 "EtherLink 16" support
-#module 3c509            	# 3c509/3c529 (MCA)/3c579 "EtherLink III" support
-#module 3c515           	# 3c515 ISA "Fast EtherLink"
-#module 3c59x            	# 3c590/3c900 series (592/595/597) "Vortex/Boomerang" support 
+module 3c501           	# 3c501 "EtherLink" support
+module 3c503           	# 3c503 "EtherLink II" support
+module 3c505           	# 3c505 "EtherLink Plus" support
+module 3c507           	# 3c507 "EtherLink 16" support
+module 3c509            	# 3c509/3c529 (MCA)/3c579 "EtherLink III" support
+module 3c515           	# 3c515 ISA "Fast EtherLink"
+module 3c59x            	# 3c590/3c900 series (592/595/597) "Vortex/Boomerang" support 
 module 8139too          	# RealTek RTL-8139 PCI Fast Ethernet Adapter support. VERY
-                       		#  common in no-name network cards. Covers also 8129.
-#module 8139cp          	# RealTek RTL-8139 C+ PCI Fast Ethernet Adapter support
-#module ac3200          	# Ansel Communications EISA 3200 support
-#module amd8111e        	# AMD 8111 (new PCI lance) support
-#module at1700          	# AT1700/1720 support
-#module atl2			# Attansic L2. Atheros(R) L2 Ethernet Network Driver (v. 1.0.40.3)
-#module b44             	# Broadcom 4400 ethernet support (v. 1.00g)
-#module cs89x0          	# CS89x0 support
-#module de4x5           	# Generic DECchip & DIGITAL EtherWORKS PCI/EISA
-#module de2104x         	# Early DECchip Tulip (dc2104x) PCI support
-#module depca           	# DEPCA, DE10x, DE200, DE201, DE202, DE422 support
-#module dgrs            	# Digi Intl. RightSwitch SE-X support
-#module dmfe            	# Davicom DM910x/DM980x support
-#module hp100           	# HP 10/100VG PCLAN (ISA, EISA, PCI) support
+                       		 common in no-name network cards. Covers also 8129.
+module 8139cp          	# RealTek RTL-8139 C+ PCI Fast Ethernet Adapter support
+module ac3200          	# Ansel Communications EISA 3200 support
+module amd8111e        	# AMD 8111 (new PCI lance) support
+module at1700          	# AT1700/1720 support
+module atl2			# Attansic L2. Atheros(R) L2 Ethernet Network Driver (v. 1.0.40.3)
+module b44             	# Broadcom 4400 ethernet support (v. 1.00g)
+module cs89x0          	# CS89x0 support
+module de4x5           	# Generic DECchip & DIGITAL EtherWORKS PCI/EISA
+module de2104x         	# Early DECchip Tulip (dc2104x) PCI support
+module depca           	# DEPCA, DE10x, DE200, DE201, DE202, DE422 support
+module dgrs            	# Digi Intl. RightSwitch SE-X support
+module dmfe            	# Davicom DM910x/DM980x support
+module hp100           	# HP 10/100VG PCLAN (ISA, EISA, PCI) support
 module e100            	# EtherExpressPro/100 support (e100, Alternate Intel driver)
-#module e2100           	# Cabletron E21xx support
-#module eepro            	# EtherExpressPro support/EtherExpress 10 (i82595) support
-#module eepro100        	# EtherExpressPro/100 support (eepro100, original Becker driver)
-#module eexpress        	# EtherExpress 16 support
-#module epic100         	# SMC EtherPower II
-#module eth16i          	# ICL EtherTeam 16i/32 support
-#module ewrk3           	# EtherWORKS 3 (DE203, DE204, DE205) support
-#module fealnx          	# Myson MTD-8xx PCI Ethernet support
+module e2100           	# Cabletron E21xx support
+module eepro            	# EtherExpressPro support/EtherExpress 10 (i82595) support
+module eepro100        	# EtherExpressPro/100 support (eepro100, original Becker driver)
+module eexpress        	# EtherExpress 16 support
+module epic100         	# SMC EtherPower II
+module eth16i          	# ICL EtherTeam 16i/32 support
+module ewrk3           	# EtherWORKS 3 (DE203, DE204, DE205) support
+module fealnx          	# Myson MTD-8xx PCI Ethernet support
 module forcedeth 		# nForce Ethernet support (nVidia 0.62-Driver Package V1.30)
-#module hp-plus         	# HP PCLAN+ (27247B and 27252A) support
-#module hp              	# HP PCLAN (27245 and other 27xxx series) support
-#module lp486e          	# LP486E on board Ethernet
-#module lance           	# AMD LANCE and PCnet (AT1500 and NE2100) support
-#module ne io=0x300     	# NE2000/NE1000 support
-#module ne2k-pci         	# PCI version of NE-2000
-#module natsemi         	# National Semiconductor DP8381x series PCI Ethernet support
-#module ni5010          	# Racal-Interlan (Micom) NI cards
-#module ni52            	# Racal-Interlan (Micom) NI cards
-#module ni65            	# Racal-Interlan (Micom) NI cards
+module hp-plus         	# HP PCLAN+ (27247B and 27252A) support
+module hp              	# HP PCLAN (27245 and other 27xxx series) support
+module lp486e          	# LP486E on board Ethernet
+module lance           	# AMD LANCE and PCnet (AT1500 and NE2100) support
+module ne io=0x300     	# NE2000/NE1000 support
+module ne2k-pci         	# PCI version of NE-2000
+module natsemi         	# National Semiconductor DP8381x series PCI Ethernet support
+module ni5010          	# Racal-Interlan (Micom) NI cards
+module ni52            	# Racal-Interlan (Micom) NI cards
+module ni65            	# Racal-Interlan (Micom) NI cards
 module pcnet32	         	# AMD PCnet32 PCI support
 module sis900           	# SiS 900/7016 PCI Fast Ethernet Adapter support. Common
-	                       	#  in integrated motherboards
-#module smc-ultra       	# SMC Ultra support
-#module smc9194         	# SMC 9194 support
-#module starfire        	# Adaptec Starfire/DuraLAN support
-#module sundance        	# Sundance Alta support
-#module tlan            	# TI ThunderLAN support, Compaq Neteligent 10/100
-#module typhoon         	# 3cr990 series "Typhoon" support
-#module tulip           	# DECchip Tulip (dc21x4x) PCI support
+	                       	 # in integrated motherboards
+module smc-ultra       	# SMC Ultra support
+module smc9194         	# SMC 9194 support
+module starfire        	# Adaptec Starfire/DuraLAN support
+module sundance        	# Sundance Alta support
+module tlan            	# TI ThunderLAN support, Compaq Neteligent 10/100
+module typhoon         	# 3cr990 series "Typhoon" support
+module tulip           	# DECchip Tulip (dc21x4x) PCI support
 module via-rhine        	# VIA Rhine support (both Rhine I and II). Common in integrated motherboards
-#module wd              	# WD80*3 support
-#module winbond-840     	# Winbond W89c840 Ethernet support
-#module xircom_cb       	# Xircom CardBus support
-#module xircom_tulip_cb 	# Xircom Tulip-like CardBus support
+module wd              	# WD80*3 support
+module winbond-840     	# Winbond W89c840 Ethernet support
+module xircom_cb       	# Xircom CardBus support
+module xircom_tulip_cb 	# Xircom Tulip-like CardBus support
 
 
 #!!!Ethernet 1000 Mbit Modules
@@ -270,49 +270,49 @@ module ath_pci        		#  Madwifi Support
 #!!!PCI
 #
 
-#module snd-ali5451                     # AC97 intergrated device with ALi M5451 Audio Controller
-                                        #  (M1535/M1535D/M1535+/M1535D+ south bridges)
-#module snd-atiixp                      # AC97 intergrated device with ATI chipsets
-                                        #  (ATI IXP 150/200/250/300/400)
-#module snd-au8810                      # Aureal Advantage soundcards
-#module snd-au8820                      # Aureal Vortex soundcards
-#module snd-au8830                      # Aureal Vortex 2 soundcards
-#module snd-azt3328                     # Aztech AZF3328 (PCI168) soundcards
-#module snd-cs46xx                      # Cirrus Logic CS4610/CS4612/CS4614/CS4615/CS4622/
-                                        #  CS4624/CS4630/CS4280 chips
-#module snd-cs4281                      # Cirrus Logic CS4281 chips
-#module snd-cs5535audio                 # CS5535/CS5536 Audio
+module snd-ali5451                     # AC97 intergrated device with ALi M5451 Audio Controller
+                                         (M1535/M1535D/M1535+/M1535D+ south bridges)
+module snd-atiixp                      # AC97 intergrated device with ATI chipsets
+                                         (ATI IXP 150/200/250/300/400)
+module snd-au8810                      # Aureal Advantage soundcards
+module snd-au8820                      # Aureal Vortex soundcards
+module snd-au8830                      # Aureal Vortex 2 soundcards
+module snd-azt3328                     # Aztech AZF3328 (PCI168) soundcards
+module snd-cs46xx                      # Cirrus Logic CS4610/CS4612/CS4614/CS4615/CS4622/
+                                         CS4624/CS4630/CS4280 chips
+module snd-cs4281                      # Cirrus Logic CS4281 chips
+module snd-cs5535audio                 # CS5535/CS5536 Audio
 module snd-emu10k1                     # Sound Blaster PCI 512, Live!, Audigy and
-                                        #  E-mu APS (partially supported) soundcards
-#module snd-emu10k1x                    # Emu10k1X (Dell OEM Version)
-#module snd-korg1212                    # Korg 1212IO soundcards
-#module snd-mixart                      # Digigram miXart soundcards
+                                         E-mu APS (partially supported) soundcards
+module snd-emu10k1x                    # Emu10k1X (Dell OEM Version)
+module snd-korg1212                    # Korg 1212IO soundcards
+module snd-mixart                      # Digigram miXart soundcards
 module snd-nm256                       # NeoMagic NM256AV/ZX chips
-#module snd-rme32                       # RME Digi32, Digi32 PRO and Digi32/8 (Sek'd Prodif32,
-                                        #  Prodif96 and Prodif Gold) audio devices
-#module snd-rme96                       # RME Digi96, Digi96/8 and Digi96/8 PRO/PAD/PST soundcards
-#module snd-rme9652                     # RME Hammerfall (RME Digi9652/Digi9636) soundcards
-#module snd-hdsp                        # RME Hammerfall DSP Audio soundcards
+module snd-rme32                       # RME Digi32, Digi32 PRO and Digi32/8 (Sek'd Prodif32,
+                                         Prodif96 and Prodif Gold) audio devices
+module snd-rme96                       # RME Digi96, Digi96/8 and Digi96/8 PRO/PAD/PST soundcards
+module snd-rme9652                     # RME Hammerfall (RME Digi9652/Digi9636) soundcards
+module snd-hdsp                        # RME Hammerfall DSP Audio soundcards
 module snd-hda-intel model=auto position_fix=1       # Intel HD Audio with default parameters - you may need to change these
-					# Further help: http://wiki.sabayon.org/index.php?title=HOWTO:_Resolve_Problems_with_HDA-Intel_Sound_Cards
-#module snd-trident                     # Trident 4D-Wave DX/NX or SiS 7018 chips
-#module snd-ymfpci                      # Yamaha PCI chips YMF724,YMF724F,YMF740,YMF740C,YMF744,YMF754
-#module snd-als4000                     # Avance Logic ALS4000 chips
-#module snd-cmipci                      # C-Media CMI8338 or CMI8738 chips
-#module snd-ens1370                     # Ensoniq AudioPCI ES1370 chips
-#module snd-ens1371                     # Ensoniq AudioPCI ES1371 chips and Sound Blaster PCI 64 or 128
-#module snd-es1938                      # ESS Solo-1 (ES1938, ES1946, ES1969) chips
-#module snd-es1968                      # ESS Maestro 1/2/2E chips
-#module snd-maestro3                    # ESS Maestro 3 (Allegro) chips
-#module snd-fm801                       # ForteMedia FM801 chip
-#module snd-ice1712                     # ICE1712 (Envy24) chip
-#module snd-ice1724                     # ICE/VT1724/1720 (Envy24HT/PT) chips
+					Further help: http://wiki.sabayon.org/index.php?title=HOWTO:_Resolve_Problems_with_HDA-Intel_Sound_Cards
+module snd-trident                     # Trident 4D-Wave DX/NX or SiS 7018 chips
+module snd-ymfpci                      # Yamaha PCI chips YMF724,YMF724F,YMF740,YMF740C,YMF744,YMF754
+module snd-als4000                     # Avance Logic ALS4000 chips
+module snd-cmipci                      # C-Media CMI8338 or CMI8738 chips
+module snd-ens1370                     # Ensoniq AudioPCI ES1370 chips
+module snd-ens1371                     # Ensoniq AudioPCI ES1371 chips and Sound Blaster PCI 64 or 128
+module snd-es1938                      # ESS Solo-1 (ES1938, ES1946, ES1969) chips
+module snd-es1968                      # ESS Maestro 1/2/2E chips
+module snd-maestro3                    # ESS Maestro 3 (Allegro) chips
+module snd-fm801                       # ForteMedia FM801 chip
+module snd-ice1712                     # ICE1712 (Envy24) chip
+module snd-ice1724                     # ICE/VT1724/1720 (Envy24HT/PT) chips
 module snd-intel8x0                    # AC97 intergrated device with Intel/SiS/nVidia/AMD chipsets, or
-                                        #  ALi chipsets using the M5455 Audio Controller
-#module snd-sonicvibes                  # S3 SonicVibes chip
-#module snd-sonicvibes                  # S3 SonicVibes chip
+                                         ALi chipsets using the M5455 Audio Controller
+module snd-sonicvibes                  # S3 SonicVibes chip
+module snd-sonicvibes                  # S3 SonicVibes chip
 module snd-via82xx                     # AC97 intergrated device with VIA chipsets
-#module snd-vx222                       # Digigram VX222 soundcards
+module snd-vx222                       # Digigram VX222 soundcards
 
 #!!USB Devices
 module usb-hid			# Needed for USB keyboards and mice  
